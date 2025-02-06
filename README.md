@@ -1,93 +1,199 @@
-# CTG Plotter
+# **CTG/EFM/NST Plotting Package**  
 
+Developed by **Oxford Digital Health Labs**  
+**Nuffield Department of Women's and Reproductive Health**  
+**University of Oxford**  
+**Women's Centre (Level 3), John Radcliffe Hospital, OX3 9DU, United Kingdom**  
 
+Contact: **digitalhealthlabs@wrh.ox.ac.uk**  
+Website: [https://oxdhl.com/](https://oxdhl.com/)  
 
-## Getting started
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## **1. Overview**  
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+This package provides a **professional-grade plotting tool** for **Cardiotocography (CTG)**, also known as **Electronic Fetal Monitoring (EFM)** or the **Non-Stress Test (NST)** in the United States. The tool is designed for clinical and research applications, supporting:  
 
-## Add your files
+- **Standardised plotting conventions** for fetal heart rate (FHR) and uterine contractions  
+- **Customisable scale settings** to match regional conventions:  
+  - **1 cm per minute** (Used in the UK, Europe, and most non-US countries)  
+  - **4 cm per minute** (Used in the United States)  
+- **Automatic segmentation for long traces** (≥30 minutes)  
+- **Customisable font sizes and visual settings**  
+- **Missing data handling**  
+- **Support for interactive plots (Plotly) and publication-quality static plots (Matplotlib)**  
+- **Multiple export formats** (PNG, PDF, SVG, EPS)  
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+This package is designed for **clinical research, AI model validation, and real-time fetal monitoring analysis**.
 
+---
+
+## **2. Installation Guide**  
+
+### **2.1 System Requirements**  
+
+Ensure you have the following software installed:  
+
+- Python **≥3.7**  
+- Matplotlib **≥3.4**  
+- NumPy **≥1.21**  
+- Plotly **(optional, for interactive mode)**  
+
+### **2.2 Install Required Python Packages**  
+
+To install all dependencies, run:  
+
+```bash
+pip install numpy matplotlib plotly
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/oxdhl-tools/ctg-plotter.git
-git branch -M main
-git push -uf origin main
+
+If using Conda:  
+
+```bash
+conda install numpy matplotlib
+conda install -c plotly plotly
 ```
 
-## Integrate with your tools
+To enable **Plotly export functionality**, install **Kaleido**:  
 
-- [ ] [Set up project integrations](https://gitlab.com/oxdhl-tools/ctg-plotter/-/settings/integrations)
+```bash
+pip install kaleido
+```
 
-## Collaborate with your team
+---
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## **3. Usage Guide**  
 
-## Test and Deploy
+### **3.1 Running the Demo Script**  
 
-Use the built-in continuous integration in GitLab.
+To generate example plots, run:  
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+```bash
+python demo_ctg_plots.py
+```
 
-***
+This script will generate multiple sample plots demonstrating different configurations, including **split vs. unsplit traces, scaling differences, and handling of short traces**.  
 
-# Editing this README
+---
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+### **3.2 Understanding Example Plots**  
 
-## Suggestions for a good README
+| Filename | Mode | Duration | Scale | Trimmed |
+|----------|------|----------|------|---------|
+| `unsplit_20min_1cm_trimFalse.png` | Unsplit | 20 min | 1 cm/min (UK/Non-USA) | No |
+| `unsplit_20min_4cm_trimFalse.png` | Unsplit | 20 min | 4 cm/min (USA) | No |
+| `split_45min_1cm_trimFalse.png` | Split | 45 min | 1 cm/min | No |
+| `split_45min_4cm_trimFalse.png` | Split | 45 min | 4 cm/min | No |
+| `unsplit_45min_1cm_trimTrue.png` | Unsplit | 45 min | 1 cm/min | Yes |
+| `unsplit_45min_4cm_trimTrue.png` | Unsplit | 45 min | 4 cm/min | Yes |
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+- **Unsplit Mode** → The entire CTG/EFM trace is plotted in one figure  
+- **Split Mode** → If the trace is **longer than 30 minutes**, it is broken into multiple 30-minute plots  
+- **Trimmed Mode** → If `trim=True`, no padding is applied to short traces  
 
-## Name
-Choose a self-explaining name for your project.
+---
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## **4. Using the Plotting Module (`ctg_plotter.py`)**  
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+For integration into research pipelines, import the function:
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```python
+from ctg_plotter import plot_ctg
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### **4.1 Example Usage**  
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```python
+import numpy as np
+from ctg_plotter import plot_ctg
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+# Generate synthetic CTG/EFM data
+duration = 40  # 40 minutes
+sampling_freq = 4  # 4 Hz
+total_points = int(duration * 60 * sampling_freq)
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+time = np.linspace(0, duration, total_points)
+FHR = 140 + 10 * np.sin(2 * np.pi * time / 10)  # Simulated FHR data
+MHR = 80 + 5 * np.sin(2 * np.pi * time / 15)  # Simulated MHR data
+TOCO = 20 + 10 * np.abs(np.sin(2 * np.pi * time / 5))  # Simulated uterine contractions
+Movements = (np.random.rand(total_points) > 0.98).astype(int)  # Random fetal movements
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+# Generate and save plot
+plot_ctg(FHR, sampling_freq=4, MHR=MHR, TOCO=TOCO, Movements=Movements,
+         Plot_missing=False, Split=True, interactive=False,
+         Save=True, filename="ctg_output.png", scale_cm=4, trim_to_length=False, show=True)
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+---
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## **5. Plot Features and Configurations**  
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### **5.1 Background Colour Bands**  
 
-## License
-For open source projects, say how it is licensed.
+The **FHR subplot** includes standardised background colour bands for clinical interpretation:  
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- **Red (50-80 BPM & 180-210 BPM)** → `#f8e9e9`  
+- **Yellow (80-110 BPM & 150-180 BPM)** → `#fcfce9`  
+- **White (110-150 BPM)** → `#ffffff`  
+
+The **TOCO subplot** has a **light blue background** (`#f2fefe`).
+
+### **5.2 Axis and Grid Details**  
+
+#### **FHR Subplot (Upper Plot)**  
+
+- **X-Axis (Time in Minutes)**  
+  - **Major grid** every **1 minute**  
+  - **Minor grid** every **30 seconds**  
+  - **Labels** appear every **10 minutes**  
+
+- **Y-Axis (BPM)**  
+  - **Range:** `50–210 BPM`  
+  - **Major ticks:** `60, 80, 100, 120, 140, 160, 180, 200`  
+  - **Minor ticks:** Every **10 BPM**  
+
+#### **TOCO Subplot (Lower Plot)**  
+
+- **X-Axis** → Matches FHR subplot  
+- **Y-Axis (Uterine Contractions)**  
+  - **Range:** `0–100`  
+  - **Major ticks:** `25, 50, 75`  
+
+---
+
+## **6. How to Cite**  
+
+If you use this package in your research, please cite:  
+
+> Oxford Digital Health Labs. **CTG/EFM/NST Plotting Package: A High-Quality Fetal Monitoring Visualisation Tool**. Nuffield Department of Women's and Reproductive Health, University of Oxford. Version X.X (2025).  
+
+### **BibTeX Citation Format**  
+
+```bibtex
+@software{oxdhl_ctgplotter_2025,
+  author = {Oxford Digital Health Labs},
+  title = {CTG/EFM/NST Plotting Package: A High-Quality Fetal Monitoring Visualisation Tool},
+  institution = {Nuffield Department of Women's and Reproductive Health, University of Oxford},
+  year = {2025},
+  version = {X.X},
+  url = {https://oxdhl.com/}
+}
+```
+
+For further information or updates, visit:  
+[https://oxdhl.com/](https://oxdhl.com/)  
+
+---
+
+## **7. License & Contributions**  
+
+This package is released under an **open-source license**. Contributions, bug reports, and feature requests are welcome.
+
+### **Developers & Contributors**  
+
+- **Oxford Digital Health Labs**  
+- **Nuffield Department of Women's and Reproductive Health**  
+- **University of Oxford**  
+
+📧 Contact: **digitalhealthlabs@wrh.ox.ac.uk**  
+🔗 Website: [https://oxdhl.com/](https://oxdhl.com/)
