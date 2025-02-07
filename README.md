@@ -5,8 +5,8 @@ Developed by **Oxford Digital Health Labs**
 **University of Oxford**  
 **Women's Centre (Level 3), John Radcliffe Hospital, OX3 9DU, United Kingdom**  
 
-Contact: **digitalhealthlabs@wrh.ox.ac.uk**  
-Website: [https://oxdhl.com/](https://oxdhl.com/)  
+📧 Contact: **digitalhealthlabs@wrh.ox.ac.uk**  
+🔗 Website: [https://oxdhl.com/](https://oxdhl.com/)  
 
 ---
 
@@ -18,11 +18,13 @@ This package provides a **professional-grade plotting tool** for **Cardiotocogra
 - **Customisable scale settings** to match regional conventions:  
   - **1 cm per minute** (Used in the UK, Europe, and most non-US countries)  
   - **4 cm per minute** (Used in the United States)  
+- **Baseline visualisation**, including confidence intervals (optional)  
 - **Automatic segmentation for long traces** (≥30 minutes)  
 - **Customisable font sizes and visual settings**  
 - **Missing data handling**  
 - **Support for interactive plots (Plotly) and publication-quality static plots (Matplotlib)**  
 - **Multiple export formats** (PNG, PDF, SVG, EPS)  
+- **Support for saving plots to a specified directory**  
 
 This package is designed for **clinical research, AI model validation, and real-time fetal monitoring analysis**.
 
@@ -72,7 +74,7 @@ To generate example plots, run:
 python demo_ctg_plots.py
 ```
 
-This script will generate multiple sample plots demonstrating different configurations, including **split vs. unsplit traces, scaling differences, and handling of short traces**.  
+This script will generate multiple sample plots demonstrating different configurations, including **split vs. unsplit traces, scaling differences, baseline visualisation, and handling of short traces**.  
 
 ---
 
@@ -83,9 +85,8 @@ This script will generate multiple sample plots demonstrating different configur
 | `unsplit_20min_1cm_trimFalse.png` | Unsplit | 20 min | 1 cm/min (UK/Non-USA) | No |
 | `unsplit_20min_4cm_trimFalse.png` | Unsplit | 20 min | 4 cm/min (USA) | No |
 | `split_45min_1cm_trimFalse.png` | Split | 45 min | 1 cm/min | No |
-| `split_45min_4cm_trimFalse.png` | Split | 45 min | 4 cm/min | No |
 | `unsplit_45min_1cm_trimTrue.png` | Unsplit | 45 min | 1 cm/min | Yes |
-| `unsplit_45min_4cm_trimTrue.png` | Unsplit | 45 min | 4 cm/min | Yes |
+| `split_10min_1cm_trimTrue.png` | Split | 10 min | 1 cm/min | Yes |
 
 - **Unsplit Mode** → The entire CTG/EFM trace is plotted in one figure  
 - **Split Mode** → If the trace is **longer than 30 minutes**, it is broken into multiple 30-minute plots  
@@ -118,10 +119,16 @@ MHR = 80 + 5 * np.sin(2 * np.pi * time / 15)  # Simulated MHR data
 TOCO = 20 + 10 * np.abs(np.sin(2 * np.pi * time / 5))  # Simulated uterine contractions
 Movements = (np.random.rand(total_points) > 0.98).astype(int)  # Random fetal movements
 
+# Generate a baseline with confidence intervals
+baseline = np.full_like(FHR, 140)  # Flat baseline at 140 BPM
+baseline_ci = np.vstack([baseline - 5, baseline + 5])  # 5 BPM confidence interval
+
 # Generate and save plot
 plot_ctg(FHR, sampling_freq=4, MHR=MHR, TOCO=TOCO, Movements=Movements,
+         baseline=baseline, baseline_ci=baseline_ci,
          Plot_missing=False, Split=True, interactive=False,
-         Save=True, filename="ctg_output.png", scale_cm=4, trim_to_length=False, show=True)
+         Save=True, filename="ctg_output.png", save_dir="output_plots",
+         scale_cm=4, trim_to_length=False, show=True)
 ```
 
 ---
@@ -138,7 +145,13 @@ The **FHR subplot** includes standardised background colour bands for clinical i
 
 The **TOCO subplot** has a **light blue background** (`#f2fefe`).
 
-### **5.2 Axis and Grid Details**  
+### **5.2 Baseline Visualisation**  
+
+- A **baseline** can be plotted alongside the FHR trace.  
+- It appears as a **dark blue, dotted line (width 0.10)** by default (configurable).  
+- Optionally, a **confidence interval (CI)** can be displayed as a shaded region.  
+
+### **5.3 Axis and Grid Details**  
 
 #### **FHR Subplot (Upper Plot)**  
 
@@ -175,7 +188,7 @@ If you use this package in your research, please cite:
   title = {CTG/EFM/NST Plotting Package: A High-Quality Fetal Monitoring Visualisation Tool},
   institution = {Nuffield Department of Women's and Reproductive Health, University of Oxford},
   year = {2025},
-  version = {X.X},
+  version = {1.0},
   url = {https://oxdhl.com/}
 }
 ```
