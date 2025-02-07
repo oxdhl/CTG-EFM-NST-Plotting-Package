@@ -243,7 +243,7 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
                     fig.add_trace(go.Scatter(
                         x=x_fill, y=y_fill, fill='toself', name='Baseline CI',
                         line=dict(color='rgba(0,0,0,0)'), showlegend=False,
-                        fillcolor=default_config["baseline_color"], opacity=0.2
+                        fillcolor=default_config["baseline_ci_color"], opacity=0.2
                     ), row=1, col=1 if TOCO is not None else None)
             if MHR is not None:
                 fig.add_trace(go.Scatter(
@@ -357,7 +357,7 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
                     lower = baseline_ci[0, start:end]
                     upper = baseline_ci[1, start:end]
                     ax1.fill_between(time_seg, lower, upper,
-                                     color=default_config["baseline_color"],
+                                     color=default_config["baseline_ci_color"],
                                      alpha=0.2, label="Baseline CI")
             if MHR is not None:
                 ax1.plot(time_seg, MHR[start:end],
