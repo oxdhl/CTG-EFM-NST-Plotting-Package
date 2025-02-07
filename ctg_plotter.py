@@ -140,9 +140,10 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
         "linewidth_TOCO": 0.75,
         "movement_size": 3,
         # Baseline plotting defaults:
-        "baseline_color": "darkblue",
-        "baseline_linewidth": 0.10,
+        "baseline_color": "#3182bd",
+        "baseline_linewidth": 0.50,
         "baseline_linestyle": "dotted",
+        "baseline_ci_color": "#deebf7"
     }
     if config is not None:
         default_config.update(config)
