@@ -141,12 +141,13 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
         "movement_size": 3,
         # Baseline plotting defaults:
         "baseline_color": "#3182bd",
-        "baseline_linewidth": 0.50,
-        "baseline_linestyle": "dotted",
+        "baseline_linewidth": 1.50,
+        "baseline_linestyle": "solid",
         "baseline_ci_color": "#deebf7"
     }
     if config is not None:
         default_config.update(config)
+        
     def process_signal(arr):
         arr = np.array(arr, dtype=float)
         if Plot_missing:
@@ -154,12 +155,14 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
         else:
             arr[arr <= 0] = np.nan
         return arr
+        
     FHR = process_signal(FHR)
     if MHR is not None:
         MHR = process_signal(MHR)
     if TOCO is not None:
         TOCO = process_signal(TOCO)
     time = np.linspace(0, n_points / sampling_freq / 60, num=n_points)
+    
     # Segmentation always uses 30 minutes per segment.
     if Split:
         segment_duration = 30
@@ -178,6 +181,24 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
             segments = [(0, n_points, time[0])]  # pad later to 30 minutes
         else:
             segments = [(0, n_points, time[0])]
+            
+    # --- New Code for Ensuring Square Grids in Unsplit Mode ---
+    # If scale_cm is 1, unsplit mode is used, and the signal duration exceeds 30 minutes,
+    # then recalculate the figure size so that 1 minute (horizontal) equals 20 BPM (vertical) in physical length.
+    # Assuming that for scale_cm==1, we want 1 cm per minute horizontally and 1 cm per 20 BPM vertically.
+    if (not Split) and (scale_cm == 1) and (time[-1] >= 30):
+        total_minutes = time[-1]
+        # There are 8 intervals in the default FHR y-range from 50 to 210 (i.e. (210-50)/20 = 8).
+        desired_FHR_height_cm = 8 * 1  # 8 cm if 1 cm per 20 BPM
+        desired_width_cm = total_minutes * 1  # 1 cm per minute
+        if TOCO is None:
+            figsize = (desired_width_cm / 2.54, desired_FHR_height_cm / 2.54)
+        else:
+            # If a TOCO subplot is present, the FHR subplot occupies 70% of the figure height.
+            # Therefore, the overall figure height should be increased accordingly.
+            figsize = (desired_width_cm / 2.54, (desired_FHR_height_cm / 0.7) / 2.54)
+    # --- End New Code ---
+
     # Determine default global font size if not provided.
     if font_size is None:
         if scale_cm is not None:
@@ -358,7 +379,7 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
                     upper = baseline_ci[1, start:end]
                     ax1.fill_between(time_seg, lower, upper,
                                      color=default_config["baseline_ci_color"],
-                                     alpha=0.2, label="Baseline CI")
+                                     alpha=0.5, label="Baseline CI")
             if MHR is not None:
                 ax1.plot(time_seg, MHR[start:end],
                          color=default_config["MHR_color"],
