@@ -35,6 +35,7 @@ Optional (for interactive mode):
   - plotly (and kaleido for saving images)
 """
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -48,7 +49,8 @@ except ImportError:
 def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
              Plot_missing=False, Split=False, figsize=(11.69, 8.27), config=None,
              interactive=False, Save=False, filename=None, dpi=300, 
-             font_size=None, scale_cm=None, trim_to_length=False, show=False):
+             font_size=None, scale_cm=None, trim_to_length=False, show=False,
+             save_dir=None, baseline=None, baseline_ci=None):
     """
     Plots CTG traces with the specified styling and options.
     
@@ -81,15 +83,21 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
     dpi : int, optional
         Resolution for saving (default 300 DPI).
     font_size : int, optional
-        Global font size to use for all text. If not provided and if scale_cm is given,
-        then if scale_cm == 1 then font size defaults to 8; if scale_cm == 4 then to 20.
-        Otherwise, if unsplit and signal length >=30 then 20, else 7.
+        Global font size to use for all text.
     scale_cm : float, optional
         Scale in centimeters per minute (e.g. 1 or 4). This is used to determine the default font size.
     trim_to_length : bool, optional
         If True, do not pad the x-axis for signals shorter than 30 minutes.
     show : bool, optional
         If True, display the plot(s) after generation.
+    save_dir : str, optional
+        Directory to which the plot files will be saved.
+    baseline : array-like, optional
+        A univariate time-series (same length as FHR) representing the baseline. If provided,
+        it is plotted over the FHR.
+    baseline_ci : array-like, optional
+        A 2D array (shape should be [2, n_points]) containing the confidence interval for the baseline.
+        The first row is the lower limit and the second row is the upper limit.
     
     Returns
     -------
@@ -112,17 +120,29 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
         Movements = np.array(Movements)
         if len(Movements) != n_points:
             raise ValueError("Movements must be the same length as FHR.")
-
+    if baseline is not None:
+        baseline = np.array(baseline, dtype=float)
+        if len(baseline) != n_points:
+            raise ValueError("Baseline must be the same length as FHR.")
+    if baseline_ci is not None:
+        baseline_ci = np.array(baseline_ci, dtype=float)
+        if baseline_ci.ndim != 2 or baseline_ci.shape[0] != 2 or baseline_ci.shape[1] != n_points:
+            raise ValueError("baseline_ci must be a 2D array with shape [2, n_points].")
+        
     default_config = {
         "FHR_color": "black",
         "MHR_color": "navy",
-        "TOCO_color": "black",  # updated to black
+        "TOCO_color": "black",
         "Movement_marker": "triangle",  # '^' for Matplotlib; 'triangle-up' for Plotly.
         "Movement_color": "darkgreen",
         "linewidth_FHR": 0.75,
         "linewidth_MHR": 0.50,
         "linewidth_TOCO": 0.75,
         "movement_size": 3,
+        # Baseline plotting defaults:
+        "baseline_color": "darkblue",
+        "baseline_linewidth": 0.10,
+        "baseline_linestyle": "dotted",
     }
     if config is not None:
         default_config.update(config)
@@ -199,11 +219,31 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
             else:
                 fig = go.Figure()
             fig.update_layout(font=dict(size=font_size))
+            # Plot FHR
             fig.add_trace(go.Scatter(
                 x=time_seg, y=FHR[start:end], mode='lines', name='FHR',
                 line=dict(color=default_config["FHR_color"],
                           width=default_config["linewidth_FHR"])
             ), row=1, col=1 if TOCO is not None else None)
+            # Plot Baseline if provided
+            if baseline is not None:
+                fig.add_trace(go.Scatter(
+                    x=time_seg, y=baseline[start:end], mode='lines', name='Baseline',
+                    line=dict(color=default_config["baseline_color"],
+                              width=default_config["baseline_linewidth"],
+                              dash=default_config["baseline_linestyle"])
+                ), row=1, col=1 if TOCO is not None else None)
+                if baseline_ci is not None:
+                    # Create a filled area between lower and upper CI.
+                    lower = baseline_ci[0, start:end]
+                    upper = baseline_ci[1, start:end]
+                    x_fill = np.concatenate([time_seg, time_seg[::-1]])
+                    y_fill = np.concatenate([upper, lower[::-1]])
+                    fig.add_trace(go.Scatter(
+                        x=x_fill, y=y_fill, fill='toself', name='Baseline CI',
+                        line=dict(color='rgba(0,0,0,0)'), showlegend=False,
+                        fillcolor=default_config["baseline_color"], opacity=0.2
+                    ), row=1, col=1 if TOCO is not None else None)
             if MHR is not None:
                 fig.add_trace(go.Scatter(
                     x=time_seg, y=MHR[start:end], mode='lines', name='MHR',
@@ -280,6 +320,8 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
                     save_filename = f"{base}_segment{seg_idx+1}.{ext}"
                 else:
                     save_filename = filename
+                if save_dir is not None:
+                    save_filename = os.path.join(save_dir, save_filename)
                 try:
                     fig.write_image(save_filename, scale=1,
                                     width=fig.layout.width, height=fig.layout.height)
@@ -303,6 +345,19 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
                      color=default_config["FHR_color"],
                      linewidth=default_config["linewidth_FHR"],
                      label="FHR")
+            # Plot Baseline if provided
+            if baseline is not None:
+                ax1.plot(time_seg, baseline[start:end],
+                         color=default_config["baseline_color"],
+                         linewidth=default_config["baseline_linewidth"],
+                         linestyle=default_config["baseline_linestyle"],
+                         label="Baseline")
+                if baseline_ci is not None:
+                    lower = baseline_ci[0, start:end]
+                    upper = baseline_ci[1, start:end]
+                    ax1.fill_between(time_seg, lower, upper,
+                                     color=default_config["baseline_color"],
+                                     alpha=0.2, label="Baseline CI")
             if MHR is not None:
                 ax1.plot(time_seg, MHR[start:end],
                          color=default_config["MHR_color"],
@@ -391,6 +446,8 @@ def plot_ctg(FHR, sampling_freq=4, MHR=None, TOCO=None, Movements=None,
                     save_filename = f"{base}_segment{seg_idx+1}.{ext}"
                 else:
                     save_filename = filename
+                if save_dir is not None:
+                    save_filename = os.path.join(save_dir, save_filename)
                 fig.savefig(save_filename, dpi=dpi)
             if show:
                 plt.show()
